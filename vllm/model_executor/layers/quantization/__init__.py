@@ -109,6 +109,7 @@ def get_quantization_config(quantization: str) -> type[QuantizationConfig]:
     from .qqq import QQQConfig
     from .torchao import TorchAOConfig
     from .tpu_int8 import Int8TpuConfig
+    from .bitblas_w2a8 import BitblasW2A8QuantConfig
 
     method_to_config: dict[str, type[QuantizationConfig]] = {
         "aqlm": AQLMConfig,
@@ -130,6 +131,7 @@ def get_quantization_config(quantization: str) -> type[QuantizationConfig]:
         "compressed-tensors": CompressedTensorsConfig,
         "bitsandbytes": BitsAndBytesConfig,
         "ptpc_fp8": PTPCFp8Config,
+        "bitblas_w2a8": BitblasW2A8QuantConfig,
         "qqq": QQQConfig,
         "hqq": HQQMarlinConfig,
         "experts_int8": ExpertsInt8Config,
