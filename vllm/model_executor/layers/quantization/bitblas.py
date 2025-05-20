@@ -335,7 +335,7 @@ class BitBLASLinearMethod(LinearMethodBase):
         params_dtype: torch.dtype,
         **extra_weight_attrs,
     ):
-        if self.quant_config.quant_method == "gptq":
+        if self.quant_config.quant_method in {"gptq", "bitnet", "bitblas_rmsnorm"}:
             return self.create_weights_gptq(layer, input_size_per_partition,
                                             output_partition_sizes, input_size,
                                             output_size, params_dtype,

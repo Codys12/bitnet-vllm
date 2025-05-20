@@ -17,8 +17,8 @@ from vllm.model_executor.layers.quantization.bitblas import (
 )
 
 
-class BitBLASRMSNormConfig(BitBLASConfig):
-    """BitBLAS quantization config with 2-bit weights and RMSNorm."""
+class BitnetConfig(BitBLASConfig):
+    """BitNet quantization config with 2-bit weights and RMSNorm."""
 
     def __init__(
         self,
@@ -26,39 +26,39 @@ class BitBLASRMSNormConfig(BitBLASConfig):
         group_size: Optional[int] = -1,
         desc_act: Optional[bool] = False,
         is_sym: Optional[bool] = False,
-        quant_method: Optional[str] = "gptq",
+        quant_method: Optional[str] = "bitnet",
         lm_head_quantized: bool = False,
     ) -> None:
         if weight_bits != 2:
             raise ValueError(
-                "BitBLASRMSNormConfig only supports weight_bits=2")
+                "BitnetConfig only supports weight_bits=2")
         super().__init__(weight_bits, group_size, desc_act, is_sym, quant_method,
                          lm_head_quantized)
 
     @classmethod
     def get_name(cls) -> QuantizationMethods:
-        return "bitblas_rmsnorm"
+        return "bitnet"
 
     @classmethod
-    def from_config(cls, config: dict[str, Any]) -> "BitBLASRMSNormConfig":
+    def from_config(cls, config: dict[str, Any]) -> "BitnetConfig":
         return cls(
             weight_bits=config.get("bits", 2),
             group_size=config.get("group_size", -1),
             desc_act=config.get("desc_act", False),
             is_sym=config.get("sym", False),
-            quant_method=config.get("quant_method", "gptq"),
+            quant_method=config.get("quant_method", "bitnet"),
             lm_head_quantized=config.get("lm_head", False),
         )
 
     def get_quant_method(self, layer: torch.nn.Module,
-                         prefix: str) -> Optional["BitBLASRMSNormLinearMethod"]:
+                         prefix: str) -> Optional["BitnetLinearMethod"]:
         if isinstance(layer, LinearBase):
-            return BitBLASRMSNormLinearMethod(self)
+            return BitnetLinearMethod(self)
         return None
 
 
-class BitBLASRMSNormLinearMethod(BitBLASLinearMethod):
-    """BitBLAS linear method with pre RMSNorm."""
+class BitnetLinearMethod(BitBLASLinearMethod):
+    """BitNet linear method with pre RMSNorm."""
 
     RMS_EPS = 1e-6
 
