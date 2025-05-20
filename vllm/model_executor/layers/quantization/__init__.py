@@ -17,6 +17,7 @@ QuantizationMethods = Literal[
     "nvfp4",
     "marlin",
     "bitblas",
+    "bitblas_rmsnorm",
     "gguf",
     "gptq_marlin_24",
     "gptq_marlin",
@@ -87,6 +88,7 @@ def get_quantization_config(quantization: str) -> type[QuantizationConfig]:
     from .awq import AWQConfig
     from .awq_marlin import AWQMarlinConfig
     from .bitblas import BitBLASConfig
+    from .bitblas_rmsnorm import BitBLASRMSNormConfig
     from .bitsandbytes import BitsAndBytesConfig
     from .compressed_tensors.compressed_tensors import (  # noqa: E501
         CompressedTensorsConfig)
@@ -121,6 +123,7 @@ def get_quantization_config(quantization: str) -> type[QuantizationConfig]:
         "nvfp4": ModelOptNvFp4Config,
         "marlin": MarlinConfig,
         "bitblas": BitBLASConfig,
+        "bitblas_rmsnorm": BitBLASRMSNormConfig,
         "gguf": GGUFConfig,
         "gptq_marlin_24": GPTQMarlin24Config,
         "gptq_marlin": GPTQMarlinConfig,
