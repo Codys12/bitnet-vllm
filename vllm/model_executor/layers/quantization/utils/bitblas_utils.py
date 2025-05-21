@@ -174,34 +174,29 @@ def bitblas_sort_g_idx(
 def unpack_gptq_qzeros(qzeros, bits, is_gptq_v2=False) -> torch.Tensor:
     qzeros = qzeros.view(torch.int32)
     elems_per_int32 = 32 // bits
-    unpacked_zeros = torch.zeros(
-        (qzeros.shape[0], qzeros.shape[1] * elems_per_int32),
-        dtype=torch.int8,
-        device=qzeros.device,
-        requires_grad=False,
-    )
 
-    for col in range(unpacked_zeros.shape[1]):
-        i = col % elems_per_int32
-        unpacked_zeros[:, col] = (qzeros[:, col // elems_per_int32] >>
-                                  (bits * i)) & 0xF
+    shifts = torch.arange(elems_per_int32,
+                          device=qzeros.device,
+                          dtype=torch.int32) * bits
+    zeros = torch.bitwise_and(
+        torch.bitwise_right_shift(qzeros.unsqueeze(-1), shifts), 0xF)
+    zeros = zeros.reshape(qzeros.shape[0], qzeros.shape[1] * elems_per_int32)
+    zeros = zeros.to(torch.int8)
+
     if not is_gptq_v2:
-        return unpacked_zeros + 1
-    return unpacked_zeros
+        return zeros + 1
+    return zeros
 
 
 def unpack_gptq_qweight(qweight, bits):
     qweight = qweight.view(torch.int8)
     elems_per_int8 = 8 // bits
-    unpacked_weight = torch.zeros(
-        (qweight.shape[0], qweight.shape[1] * elems_per_int8),
-        dtype=torch.int8,
-        device=qweight.device,
-        requires_grad=False,
-    )
-    for col in range(unpacked_weight.shape[1]):
-        i = col % elems_per_int8
-        unpacked_weight[:, col] = (qweight[:, col // elems_per_int8] >>
-                                   (bits * i))
 
-    return torch.bitwise_and(unpacked_weight, 2**bits - 1)
+    shifts = torch.arange(elems_per_int8,
+                          device=qweight.device,
+                          dtype=torch.int16) * bits
+    weight = torch.bitwise_right_shift(
+        qweight.to(torch.int16).unsqueeze(-1), shifts)
+    weight = torch.bitwise_and(weight, 2**bits - 1)
+    weight = weight.reshape(qweight.shape[0], qweight.shape[1] * elems_per_int8)
+    return weight.to(torch.int8)
