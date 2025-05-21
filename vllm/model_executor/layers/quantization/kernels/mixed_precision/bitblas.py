@@ -216,7 +216,7 @@ class BitBLASLinearKernel(MPLinearKernel):
         with_zeros = False
         group_size = quant_config.group_size  # type: ignore[union-attr]
         zeros_mode = quant_config.zeros_mode  # type: ignore[union-attr]
-        if quant_config.quant_method == "gptq":  # type: ignore[union-attr]
+        if quant_config.quant_method in {"gptq", "bitnet", "bitblas_rmsnorm"}:  # type: ignore[union-attr]
             with_scaling = True
             with_zeros = True
             W_dtype = f"uint{bits}"

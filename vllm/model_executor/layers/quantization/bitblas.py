@@ -362,7 +362,7 @@ class BitBLASLinearMethod(LinearMethodBase):
         with_zeros = False
         group_size = self.quant_config.group_size
         zeros_mode = self.quant_config.zeros_mode
-        if self.quant_config.quant_method == "gptq":
+        if self.quant_config.quant_method in {"gptq", "bitnet", "bitblas_rmsnorm"}:
             with_scaling = True
             with_zeros = True
             W_dtype = f"uint{bits}"
@@ -453,7 +453,7 @@ class BitBLASLinearMethod(LinearMethodBase):
         *args: Any,
         **kwargs: Any,
     ) -> torch.Tensor:
-        if self.quant_config.quant_method == "gptq":
+        if self.quant_config.quant_method in {"gptq", "bitnet", "bitblas_rmsnorm"}:
             return self.apply_gptq(*args, **kwargs)
         else:
             raise ValueError(
