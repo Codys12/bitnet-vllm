@@ -12,6 +12,7 @@ supported_hardware
 auto_awq
 bnb
 bitblas
+bitnet
 gguf
 gptqmodel
 int4

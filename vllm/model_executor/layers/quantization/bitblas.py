@@ -222,6 +222,11 @@ class BitBLASLinearMethod(LinearMethodBase):
             input size per partition is not divisible by the group size in 
             `quant_config`.
         """
+        logger.debug(
+            "create_weights_gptq called with input_size_per_partition=%s output_partition_sizes=%s",
+            input_size_per_partition,
+            output_partition_sizes,
+        )
         del input_size, output_size  # Unused arguments.
         weight_loader = extra_weight_attrs["weight_loader"]
 
@@ -248,6 +253,7 @@ class BitBLASLinearMethod(LinearMethodBase):
             layout="nt",
             bits=self.quant_config.weight_bits,
         )
+        logger.debug("BitBLAS matmul configured: shape=%s", self.bitblas_matmul.retrieve_weight_shape())
 
         # Initialize quantized weights with dimensions
         # Quantized 4Bit weights packed.
@@ -335,6 +341,10 @@ class BitBLASLinearMethod(LinearMethodBase):
         params_dtype: torch.dtype,
         **extra_weight_attrs,
     ):
+        logger.debug(
+            "create_weights called for layer with input_size_per_partition=%s",
+            input_size_per_partition,
+        )
         if self.quant_config.quant_method in {"gptq", "bitnet", "bitblas_rmsnorm"}:
             return self.create_weights_gptq(layer, input_size_per_partition,
                                             output_partition_sizes, input_size,
@@ -356,6 +366,13 @@ class BitBLASLinearMethod(LinearMethodBase):
         out_dtype="float16",
     ):
         from bitblas import MatmulConfig
+        logger.debug(
+            "Configuring BitBLAS matmul in=%s out=%s dtype=%s bits=%s",
+            infeatures,
+            outfeatures,
+            params_dtype,
+            bits,
+        )
         bitblas_dtype = self.BITBLAS_DTYPES[params_dtype]
 
         with_scaling = False
@@ -393,6 +410,7 @@ class BitBLASLinearMethod(LinearMethodBase):
 
     def _get_or_create_bitblas_operator(self, config, enable_tuning):
         from bitblas import Matmul, auto_detect_nvidia_target
+        logger.debug("Getting BitBLAS operator for config: %s", config)
         from bitblas.cache import get_database_path, global_operator_cache
         BITBLAS_DATABASE_PATH = get_database_path()
         BITBLAS_TARGET = auto_detect_nvidia_target()
@@ -422,6 +440,7 @@ class BitBLASLinearMethod(LinearMethodBase):
             _message = (
                 f"BitBLAS Operator {config} found in global_operator_cache.")
             logger.info(_message)
+        logger.debug("BitBLAS operator ready: %s", bitblas_matmul)
         return bitblas_matmul
 
     def apply_gptq(
@@ -430,6 +449,11 @@ class BitBLASLinearMethod(LinearMethodBase):
         x: torch.Tensor,
         bias: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
+        logger.debug(
+            "BitBLASLinearMethod.apply_gptq input_shape=%s weight_shape=%s",
+            tuple(x.shape),
+            tuple(layer.qweight.shape),
+        )
         qweight = layer.qweight
         scales = layer.scales
         qzeros = layer.zeros
